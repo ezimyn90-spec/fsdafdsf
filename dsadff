@@ -1,15 +1,16 @@
--- Prison Life UI Redesign for Solara (Tabs, Animations, Watermark)
+-- Prison Life UI for Solara (Extended: Combat, Visuals, Player, Teleports)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local Mouse = LocalPlayer:GetMouse()
 
--- Очистка старой копии UI при повторном запуске
-local guiName = "PrisonLifeSolaraPro"
+-- Очистка старых интерфейсов
+local guiName = "PL_Solara_Ultimate"
 pcall(function()
     if game:GetService("CoreGui"):FindFirstChild(guiName) then
         game:GetService("CoreGui")[guiName]:Destroy()
@@ -19,7 +20,6 @@ pcall(function()
     end
 end)
 
--- Создание ScreenGui
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = guiName
 ScreenGui.ResetOnSpawn = false
@@ -30,10 +30,10 @@ ScreenGui.Parent = (pcall(function() return game:GetService("CoreGui") end) and 
 -- -------------------------------------------------------------
 local Watermark = Instance.new("Frame")
 Watermark.Name = "Watermark"
-Watermark.Size = UDim2.new(0, 260, 0, 26)
-Watermark.Position = UDim2.new(0, 15, 0, 15)
-Watermark.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
-Watermark.BackgroundTransparency = 0.25
+Watermark.Size = UDim2.new(0, 270, 0, 26)
+Watermark.Position = UDim2.new(0, 16, 0, 16)
+Watermark.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
+Watermark.BackgroundTransparency = 0.2
 Watermark.BorderSizePixel = 0
 Watermark.Parent = ScreenGui
 
@@ -58,9 +58,7 @@ WmText.TextSize = 12
 WmText.TextXAlignment = Enum.TextXAlignment.Left
 WmText.Parent = Watermark
 
--- Счетчик FPS
-local frameCount = 0
-local lastFpsTime = tick()
+local frameCount, lastFpsTime = 0, tick()
 RunService.RenderStepped:Connect(function()
     frameCount = frameCount + 1
     if tick() - lastFpsTime >= 0.5 then
@@ -72,13 +70,13 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- -------------------------------------------------------------
--- 2. Главное окно (Acrylic / Glassmorphism)
+-- 2. Главное окно
 -- -------------------------------------------------------------
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 460, 0, 310)
-MainFrame.Position = UDim2.new(0.5, -230, 0.45, -155)
-MainFrame.BackgroundColor3 = Color3.fromRGB(16, 16, 22)
+MainFrame.Size = UDim2.new(0, 480, 0, 330)
+MainFrame.Position = UDim2.new(0.5, -240, 0.45, -165)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 MainFrame.BackgroundTransparency = 0.15
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -90,12 +88,10 @@ MainCorner.CornerRadius = UDim.new(0, 10)
 MainCorner.Parent = MainFrame
 
 local MainStroke = Instance.new("UIStroke")
-MainStroke.Color = Color3.fromRGB(60, 60, 80)
+MainStroke.Color = Color3.fromRGB(55, 55, 75)
 MainStroke.Thickness = 1.2
-MainStroke.Transparency = 0.2
 MainStroke.Parent = MainFrame
 
--- Шапка
 local TopBar = Instance.new("Frame")
 TopBar.Size = UDim2.new(1, 0, 0, 38)
 TopBar.BackgroundTransparency = 1
@@ -116,15 +112,15 @@ TitleLabel.Parent = TopBar
 local Separator = Instance.new("Frame")
 Separator.Size = UDim2.new(1, 0, 0, 1)
 Separator.Position = UDim2.new(0, 0, 0, 38)
-Separator.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
+Separator.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
 Separator.BorderSizePixel = 0
 Separator.Parent = MainFrame
 
--- Боковое меню вкладок (Sidebar)
+-- Сайдбар вкладок
 local Sidebar = Instance.new("Frame")
-Sidebar.Size = UDim2.new(0, 120, 1, -39)
+Sidebar.Size = UDim2.new(0, 125, 1, -39)
 Sidebar.Position = UDim2.new(0, 0, 0, 39)
-Sidebar.BackgroundColor3 = Color3.fromRGB(12, 12, 18)
+Sidebar.BackgroundColor3 = Color3.fromRGB(11, 11, 16)
 Sidebar.BackgroundTransparency = 0.35
 Sidebar.BorderSizePixel = 0
 Sidebar.Parent = MainFrame
@@ -134,27 +130,24 @@ SideCorner.CornerRadius = UDim.new(0, 10)
 SideCorner.Parent = Sidebar
 
 local SideLayout = Instance.new("UIListLayout")
-SideLayout.Padding = UDim.new(0, 6)
+SideLayout.Padding = UDim.new(0, 5)
 SideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 SideLayout.Parent = Sidebar
 
-local SidePadding = Instance.new("UIPadding")
-SidePadding.PaddingTop = UDim.new(0, 10)
-SidePadding.Parent = Sidebar
+local SidePad = Instance.new("UIPadding")
+SidePad.PaddingTop = UDim.new(0, 8)
+SidePad.Parent = Sidebar
 
--- Контейнер контента
 local PagesContainer = Instance.new("Frame")
-PagesContainer.Size = UDim2.new(1, -135, 1, -50)
-PagesContainer.Position = UDim2.new(0, 128, 0, 44)
+PagesContainer.Size = UDim2.new(1, -140, 1, -50)
+PagesContainer.Position = UDim2.new(0, 132, 0, 44)
 PagesContainer.BackgroundTransparency = 1
 PagesContainer.Parent = MainFrame
 
 -- -------------------------------------------------------------
--- 3. Система страниц и анимаций
+-- 3. Вкладки и UI компоненты
 -- -------------------------------------------------------------
 local pages = {}
-local currentTab = nil
-
 local function createPage(name)
     local page = Instance.new("ScrollingFrame")
     page.Name = name .. "Page"
@@ -167,12 +160,12 @@ local function createPage(name)
     page.Parent = PagesContainer
 
     local layout = Instance.new("UIListLayout")
-    layout.Padding = UDim.new(0, 8)
+    layout.Padding = UDim.new(0, 6)
     layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     layout.Parent = page
 
     local pad = Instance.new("UIPadding")
-    pad.PaddingTop = UDim.new(0, 4)
+    pad.PaddingTop = UDim.new(0, 2)
     pad.PaddingRight = UDim.new(0, 6)
     pad.Parent = page
 
@@ -181,38 +174,33 @@ local function createPage(name)
 end
 
 local combatPage = createPage("Combat")
+local visualsPage = createPage("Visuals")
 local playerPage = createPage("Player")
 local tpPage = createPage("Teleport")
 
-local function switchTab(tabName, tabButton)
+local function switchTab(tabName, targetBtn)
     for name, page in pairs(pages) do
-        if name == tabName then
-            page.Visible = true
-            page.CanvasPosition = Vector2.new(0, 0)
-        else
-            page.Visible = false
-        end
+        page.Visible = (name == tabName)
     end
     for _, btn in ipairs(Sidebar:GetChildren()) do
         if btn:IsA("TextButton") then
-            local active = (btn == tabButton)
-            TweenService:Create(btn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                BackgroundColor3 = active and Color3.fromRGB(99, 102, 241) or Color3.fromRGB(24, 24, 34),
-                TextColor3 = active and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(170, 170, 185)
+            local active = (btn == targetBtn)
+            TweenService:Create(btn, TweenInfo.new(0.2), {
+                BackgroundColor3 = active and Color3.fromRGB(99, 102, 241) or Color3.fromRGB(22, 22, 30),
+                TextColor3 = active and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(160, 160, 175)
             }):Play()
         end
     end
-    currentTab = tabName
 end
 
-local function addTabButton(text, pageName)
+local function addTabButton(title, pageName)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 104, 0, 32)
-    btn.BackgroundColor3 = Color3.fromRGB(24, 24, 34)
-    btn.TextColor3 = Color3.fromRGB(170, 170, 185)
+    btn.Size = UDim2.new(0, 110, 0, 30)
+    btn.BackgroundColor3 = Color3.fromRGB(22, 22, 30)
+    btn.TextColor3 = Color3.fromRGB(160, 160, 175)
     btn.Font = Enum.Font.GothamSemibold
-    btn.TextSize = 13
-    btn.Text = text
+    btn.TextSize = 12
+    btn.Text = title
     btn.Parent = Sidebar
 
     local corner = Instance.new("UICorner")
@@ -226,54 +214,16 @@ local function addTabButton(text, pageName)
 end
 
 local btnCombat = addTabButton("⚔  Бой", "Combat")
+local btnVisuals = addTabButton("👁  Визуалы", "Visuals")
 local btnPlayer = addTabButton("🏃  Игрок", "Player")
 local btnTp = addTabButton("📍  Телепорты", "Teleport")
 
--- -------------------------------------------------------------
--- 4. Компоненты UI (Плавные Кнопки и Тумблеры с ВКЛ/ВЫКЛ)
--- -------------------------------------------------------------
-local function createButton(parent, text, callback)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, 0, 0, 32)
-    btn.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
-    btn.TextColor3 = Color3.fromRGB(235, 235, 245)
-    btn.Font = Enum.Font.GothamMedium
-    btn.TextSize = 13
-    btn.Text = text
-    btn.Parent = parent
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = btn
-
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(50, 50, 68)
-    stroke.Thickness = 1
-    stroke.Parent = btn
-
-    btn.MouseEnter:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(38, 38, 52)}):Play()
-    end)
-    btn.MouseLeave:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(28, 28, 38)}):Play()
-    end)
-
-    btn.MouseButton1Click:Connect(function()
-        local orig = btn.Text
-        btn.Text = "✓ Готово!"
-        task.delay(0.6, function() btn.Text = orig end)
-        callback()
-    end)
-    return btn
-end
-
--- Анимированный Toggle с четким текстом и переключателем
 local function createToggle(parent, title, defaultState, onToggle)
     local state = defaultState or false
 
     local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, 0, 0, 36)
-    container.BackgroundColor3 = Color3.fromRGB(25, 25, 34)
+    container.Size = UDim2.new(1, 0, 0, 34)
+    container.BackgroundColor3 = Color3.fromRGB(24, 24, 32)
     container.Parent = parent
 
     local corner = Instance.new("UICorner")
@@ -281,7 +231,7 @@ local function createToggle(parent, title, defaultState, onToggle)
     corner.Parent = container
 
     local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(45, 45, 60)
+    stroke.Color = Color3.fromRGB(42, 42, 56)
     stroke.Thickness = 1
     stroke.Parent = container
 
@@ -292,80 +242,103 @@ local function createToggle(parent, title, defaultState, onToggle)
     label.Text = title
     label.TextColor3 = Color3.fromRGB(230, 230, 240)
     label.Font = Enum.Font.GothamMedium
-    label.TextSize = 13
+    label.TextSize = 12
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.Parent = container
 
-    -- Бейдж статуса (ВКЛ / ВЫКЛ)
     local badge = Instance.new("TextLabel")
-    badge.Size = UDim2.new(0, 36, 0, 20)
-    badge.Position = UDim2.new(1, -88, 0.5, -10)
+    badge.Size = UDim2.new(0, 34, 0, 18)
+    badge.Position = UDim2.new(1, -84, 0.5, -9)
     badge.BackgroundColor3 = state and Color3.fromRGB(34, 197, 94) or Color3.fromRGB(239, 68, 68)
     badge.TextColor3 = Color3.fromRGB(255, 255, 255)
     badge.Font = Enum.Font.GothamBold
-    badge.TextSize = 10
+    badge.TextSize = 9
     badge.Text = state and "ВКЛ" or "ВЫКЛ"
     badge.Parent = container
 
-    local badgeCorner = Instance.new("UICorner")
-    badgeCorner.CornerRadius = UDim.new(0, 4)
-    badgeCorner.Parent = badge
+    local bCorner = Instance.new("UICorner")
+    bCorner.CornerRadius = UDim.new(0, 4)
+    bCorner.Parent = badge
 
-    -- Переключатель (Switch)
     local switch = Instance.new("TextButton")
-    switch.Size = UDim2.new(0, 40, 0, 20)
-    switch.Position = UDim2.new(1, -48, 0.5, -10)
-    switch.BackgroundColor3 = state and Color3.fromRGB(99, 102, 241) or Color3.fromRGB(45, 45, 58)
+    switch.Size = UDim2.new(0, 38, 0, 18)
+    switch.Position = UDim2.new(1, -44, 0.5, -9)
+    switch.BackgroundColor3 = state and Color3.fromRGB(99, 102, 241) or Color3.fromRGB(42, 42, 54)
     switch.Text = ""
     switch.Parent = container
 
-    local switchCorner = Instance.new("UICorner")
-    switchCorner.CornerRadius = UDim.new(1, 0)
-    switchCorner.Parent = switch
+    local sCorner = Instance.new("UICorner")
+    sCorner.CornerRadius = UDim.new(1, 0)
+    sCorner.Parent = switch
 
     local circle = Instance.new("Frame")
-    circle.Size = UDim2.new(0, 14, 0, 14)
-    circle.Position = state and UDim2.new(1, -17, 0.5, -7) or UDim2.new(0, 3, 0.5, -7)
+    circle.Size = UDim2.new(0, 12, 0, 12)
+    circle.Position = state and UDim2.new(1, -15, 0.5, -6) or UDim2.new(0, 3, 0.5, -6)
     circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     circle.Parent = switch
 
-    local circleCorner = Instance.new("UICorner")
-    circleCorner.CornerRadius = UDim.new(1, 0)
-    circleCorner.Parent = circle
+    local cCorner = Instance.new("UICorner")
+    cCorner.CornerRadius = UDim.new(1, 0)
+    cCorner.Parent = circle
 
-    local function updateVisuals()
-        local targetColor = state and Color3.fromRGB(99, 102, 241) or Color3.fromRGB(45, 45, 58)
-        local badgeColor = state and Color3.fromRGB(34, 197, 94) or Color3.fromRGB(239, 68, 68)
-        local circlePos = state and UDim2.new(1, -17, 0.5, -7) or UDim2.new(0, 3, 0.5, -7)
-
-        TweenService:Create(switch, TweenInfo.new(0.2), {BackgroundColor3 = targetColor}):Play()
-        TweenService:Create(badge, TweenInfo.new(0.2), {BackgroundColor3 = badgeColor}):Play()
-        TweenService:Create(circle, TweenInfo.new(0.2), {Position = circlePos}):Play()
-
+    local function update()
+        TweenService:Create(switch, TweenInfo.new(0.2), {
+            BackgroundColor3 = state and Color3.fromRGB(99, 102, 241) or Color3.fromRGB(42, 42, 54)
+        }):Play()
+        TweenService:Create(badge, TweenInfo.new(0.2), {
+            BackgroundColor3 = state and Color3.fromRGB(34, 197, 94) or Color3.fromRGB(239, 68, 68)
+        }):Play()
+        TweenService:Create(circle, TweenInfo.new(0.2), {
+            Position = state and UDim2.new(1, -15, 0.5, -6) or UDim2.new(0, 3, 0.5, -6)
+        }):Play()
         badge.Text = state and "ВКЛ" or "ВЫКЛ"
     end
 
     switch.MouseButton1Click:Connect(function()
         state = not state
-        updateVisuals()
+        update()
         onToggle(state)
     end)
+end
 
-    return function(forced)
-        if forced ~= nil then state = forced end
-        updateVisuals()
-        return state
-    end
+local function createButton(parent, text, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 30)
+    btn.BackgroundColor3 = Color3.fromRGB(26, 26, 34)
+    btn.TextColor3 = Color3.fromRGB(230, 230, 240)
+    btn.Font = Enum.Font.GothamMedium
+    btn.TextSize = 12
+    btn.Text = text
+    btn.Parent = parent
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(45, 45, 60)
+    stroke.Thickness = 1
+    stroke.Parent = btn
+
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(35, 35, 48)}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(26, 26, 34)}):Play()
+    end)
+
+    btn.MouseButton1Click:Connect(function()
+        local prev = btn.Text
+        btn.Text = "✓ Выполнено"
+        task.delay(0.5, function() btn.Text = prev end)
+        callback()
+    end)
+    return btn
 end
 
 -- -------------------------------------------------------------
--- 5. Логика боя (Silent Aim, Hitboxes, Guns)
+-- 4. Логика команд и вспомогательные функции
 -- -------------------------------------------------------------
-local silentAimEnabled = false
-local hitboxEnabled = false
-local currentHitboxSize = 8
-
--- Проверка врагов по командам Prison Life
 local function isEnemy(player)
     if player == LocalPlayer or not player.Character then return false end
     if not LocalPlayer.Team or not player.Team then return true end
@@ -375,77 +348,68 @@ local function isEnemy(player)
 
     if myTeam == "Guards" then
         return theirTeam == "Inmates" or theirTeam == "Criminals"
-    elseif myTeam == "Inmates" then
-        return theirTeam == "Guards"
-    elseif myTeam == "Criminals" then
+    elseif myTeam == "Inmates" or myTeam == "Criminals" then
         return theirTeam == "Guards"
     end
     return myTeam ~= theirTeam
 end
 
-local function getClosestHead()
-    local targetHead = nil
-    local shortestDist = math.huge
-    local mousePos = UserInputService:GetMouseLocation()
+local function getTeamColor(player)
+    if not player.Team then return Color3.fromRGB(255, 255, 255) end
+    local name = player.Team.Name
+    if name == "Guards" then
+        return Color3.fromRGB(0, 140, 255)
+    elseif name == "Inmates" then
+        return Color3.fromRGB(255, 140, 0)
+    elseif name == "Criminals" then
+        return Color3.fromRGB(255, 40, 40)
+    end
+    return Color3.fromRGB(220, 220, 220)
+end
 
-    for _, p in ipairs(Players:GetPlayers()) do
-        if isEnemy(p) then
-            local char = p.Character
-            local head = char and char:FindFirstChild("Head")
-            local hum = char and char:FindFirstChild("Humanoid")
-            if head and hum and hum.Health > 0 then
-                local screenPos, onScreen = Camera:WorldToViewportPoint(head.Position)
-                if onScreen then
-                    local dist = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
-                    if dist < shortestDist and dist < 350 then
-                        shortestDist = dist
-                        targetHead = head
-                    end
+-- -------------------------------------------------------------
+-- 5. Вкладка "Бой" (Silent Aim + Hitbox Expander)
+-- -------------------------------------------------------------
+local silentAimEnabled = false
+local hitboxEnabled = false
+local hitboxVisuals = false
+local currentHitboxSize = 8
+
+createToggle(combatPage, "Silent Aim (В голову)", false, function(v) silentAimEnabled = v end)
+createToggle(combatPage, "Расширение Хитбоксов (Logic)", false, function(v)
+    hitboxEnabled = v
+    if not v then
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character then
+                local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+                local head = p.Character:FindFirstChild("Head")
+                if hrp then
+                    hrp.Size = Vector3.new(2, 2, 1)
+                    hrp.Transparency = 1
+                end
+                if head then
+                    head.Size = Vector3.new(2, 1, 1)
                 end
             end
         end
     end
-    return targetHead
-end
-
--- Хук для Silent Aim
-pcall(function()
-    local oldIndex
-    oldIndex = hookmetamethod(game, "__index", function(self, key)
-        if silentAimEnabled and not checkcaller() and self == Mouse then
-            if key == "Hit" or key == "hit" then
-                local head = getClosestHead()
-                if head then return head.CFrame end
-            elseif key == "Target" or key == "target" then
-                local head = getClosestHead()
-                if head then return head end
-            end
-        end
-        return oldIndex(self, key)
-    end)
 end)
 
--- Создание вкладки "Бой"
-createToggle(combatPage, "Silent Aim (В голову)", false, function(val)
-    silentAimEnabled = val
-end)
-
-createToggle(combatPage, "Увеличение Хитбоксов", false, function(val)
-    hitboxEnabled = val
-    if not val then
+createToggle(combatPage, "Показ Хитбоксов (Визуал)", false, function(v)
+    hitboxVisuals = v
+    if not v then
         for _, p in ipairs(Players:GetPlayers()) do
             if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
                 p.Character.HumanoidRootPart.Transparency = 1
             end
         end
     end
 end)
 
--- Контроллер размера хитбокса
+-- Управление размером хитбокса
 local sizeContainer = Instance.new("Frame")
-sizeContainer.Size = UDim2.new(1, 0, 0, 34)
-sizeContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 34)
+sizeContainer.Size = UDim2.new(1, 0, 0, 32)
+sizeContainer.BackgroundColor3 = Color3.fromRGB(24, 24, 32)
 sizeContainer.Parent = combatPage
 
 local sizeCorner = Instance.new("UICorner")
@@ -464,12 +428,12 @@ sizeInfo.TextXAlignment = Enum.TextXAlignment.Left
 sizeInfo.Parent = sizeContainer
 
 local minusBtn = Instance.new("TextButton")
-minusBtn.Size = UDim2.new(0, 32, 0, 24)
-minusBtn.Position = UDim2.new(1, -74, 0.5, -12)
-minusBtn.BackgroundColor3 = Color3.fromRGB(38, 38, 52)
+minusBtn.Size = UDim2.new(0, 30, 0, 22)
+minusBtn.Position = UDim2.new(1, -70, 0.5, -11)
+minusBtn.BackgroundColor3 = Color3.fromRGB(36, 36, 48)
 minusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 minusBtn.Font = Enum.Font.GothamBold
-minusBtn.TextSize = 14
+minusBtn.TextSize = 13
 minusBtn.Text = "-"
 minusBtn.Parent = sizeContainer
 local mCorner = Instance.new("UICorner")
@@ -477,12 +441,12 @@ mCorner.CornerRadius = UDim.new(0, 4)
 mCorner.Parent = minusBtn
 
 local plusBtn = Instance.new("TextButton")
-plusBtn.Size = UDim2.new(0, 32, 0, 24)
-plusBtn.Position = UDim2.new(1, -38, 0.5, -12)
-plusBtn.BackgroundColor3 = Color3.fromRGB(38, 38, 52)
+plusBtn.Size = UDim2.new(0, 30, 0, 22)
+plusBtn.Position = UDim2.new(1, -35, 0.5, -11)
+plusBtn.BackgroundColor3 = Color3.fromRGB(36, 36, 48)
 plusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 plusBtn.Font = Enum.Font.GothamBold
-plusBtn.TextSize = 14
+plusBtn.TextSize = 13
 plusBtn.Text = "+"
 plusBtn.Parent = sizeContainer
 local pCorner = Instance.new("UICorner")
@@ -516,22 +480,111 @@ createButton(combatPage, "🔫 Взять всё оружие (AK, Shotgun, M9)"
     end
 end)
 
--- -------------------------------------------------------------
--- 6. Вкладка "Игрок" (Скорость, Двери)
--- -------------------------------------------------------------
-local speedEnabled = false
-createToggle(playerPage, "Быстрый бег (Speedhack)", false, function(val)
-    speedEnabled = val
+-- Silent Aim Target Finder
+local function getClosestHead()
+    local targetHead = nil
+    local shortestDist = math.huge
+    local mousePos = UserInputService:GetMouseLocation()
+
+    for _, p in ipairs(Players:GetPlayers()) do
+        if isEnemy(p) then
+            local char = p.Character
+            local head = char and char:FindFirstChild("Head")
+            local hum = char and char:FindFirstChild("Humanoid")
+            if head and hum and hum.Health > 0 then
+                local screenPos, onScreen = Camera:WorldToViewportPoint(head.Position)
+                if onScreen then
+                    local dist = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
+                    if dist < shortestDist and dist < 350 then
+                        shortestDist = dist
+                        targetHead = head
+                    end
+                end
+            end
+        end
+    end
+    return targetHead
+end
+
+pcall(function()
+    local oldIndex
+    oldIndex = hookmetamethod(game, "__index", function(self, key)
+        if silentAimEnabled and not checkcaller() and self == Mouse then
+            if key == "Hit" or key == "hit" then
+                local head = getClosestHead()
+                if head then return head.CFrame end
+            elseif key == "Target" or key == "target" then
+                local head = getClosestHead()
+                if head then return head end
+            end
+        end
+        return oldIndex(self, key)
+    end)
 end)
 
-createButton(playerPage, "🚪 Удалить двери (Сквозь решетки)", function()
+-- -------------------------------------------------------------
+-- 6. Вкладка "Визуалы" (Chams, Names, Sky/Lighting)
+-- -------------------------------------------------------------
+local chamsEnabled = false
+local namesEnabled = false
+
+createToggle(visualsPage, "Chams (Подсветка игроков)", false, function(v)
+    chamsEnabled = v
+    if not v then
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p.Character and p.Character:FindFirstChild("SolaraHighlight") then
+                p.Character.SolaraHighlight:Destroy()
+            end
+        end
+    end
+end)
+
+createToggle(visualsPage, "ESP Ники и дистанция", false, function(v)
+    namesEnabled = v
+    if not v then
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p.Character and p.Character:FindFirstChild("Head") and p.Character.Head:FindFirstChild("SolaraTag") then
+                p.Character.Head.SolaraTag:Destroy()
+            end
+        end
+    end
+end)
+
+-- Управление освещением
+createButton(visualsPage, "☀️ Установить День", function()
+    Lighting.ClockTime = 14
+    Lighting.Brightness = 2
+end)
+
+createButton(visualsPage, "🌙 Установить Ночь", function()
+    Lighting.ClockTime = 0
+    Lighting.Brightness = 1
+end)
+
+createButton(visualsPage, "🌅 Установить Закат", function()
+    Lighting.ClockTime = 18
+    Lighting.Brightness = 1.8
+    Lighting.OutdoorAmbient = Color3.fromRGB(255, 130, 80)
+end)
+
+createButton(visualsPage, "💡 Fullbright (Без теней)", function()
+    Lighting.Brightness = 2
+    Lighting.ClockTime = 14
+    Lighting.GlobalShadows = false
+    Lighting.OutdoorAmbient = Color3.fromRGB(150, 150, 150)
+end)
+
+-- -------------------------------------------------------------
+-- 7. Вкладка "Игрок" и "Телепорты"
+-- -------------------------------------------------------------
+local speedEnabled = false
+createToggle(playerPage, "Быстрый бег (Speedhack)", false, function(v) speedEnabled = v end)
+
+createButton(playerPage, "🚪 Удалить двери (Сквозь стены)", function()
     local doors = workspace:FindFirstChild("Doors")
     if doors then doors:Destroy() end
 end)
 
--- -------------------------------------------------------------
--- 7. Вкладка "Телепорты"
--- -------------------------------------------------------------
 local function teleportTo(cf)
     local char = LocalPlayer.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
@@ -545,33 +598,93 @@ createButton(tpPage, "Блок с камерами", function() teleportTo(CFram
 createButton(tpPage, "Крыша тюрьмы", function() teleportTo(CFrame.new(823, 119, 2358)) end)
 
 -- -------------------------------------------------------------
--- 8. Главный рабочий цикл
+-- 8. Главный рабочий цикл (ESP, Chams, Хитбоксы, Скорость)
 -- -------------------------------------------------------------
 RunService.RenderStepped:Connect(function()
-    -- Обработка скорости
+    -- Скорость
     if speedEnabled then
         local char = LocalPlayer.Character
         local hum = char and char:FindFirstChild("Humanoid")
         if hum then hum.WalkSpeed = 34 end
     end
 
-    -- Обработка хитбоксов
-    if hitboxEnabled then
-        for _, p in ipairs(Players:GetPlayers()) do
-            if isEnemy(p) then
-                local char = p.Character
-                local hrp = char and char:FindFirstChild("HumanoidRootPart")
-                if hrp then
+    -- Обработка каждого игрока
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            local char = p.Character
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            local head = char:FindFirstChild("Head")
+            local hum = char:FindFirstChild("Humanoid")
+
+            -- Chams
+            if chamsEnabled and hum and hum.Health > 0 then
+                local hl = char:FindFirstChild("SolaraHighlight")
+                if not hl then
+                    hl = Instance.new("Highlight")
+                    hl.Name = "SolaraHighlight"
+                    hl.FillTransparency = 0.4
+                    hl.OutlineTransparency = 0
+                    hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+                    hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                    hl.Parent = char
+                end
+                hl.FillColor = getTeamColor(p)
+            else
+                if char:FindFirstChild("SolaraHighlight") then
+                    char.SolaraHighlight:Destroy()
+                end
+            end
+
+            -- Names / Distance ESP
+            if namesEnabled and head and hum and hum.Health > 0 then
+                local tag = head:FindFirstChild("SolaraTag")
+                if not tag then
+                    tag = Instance.new("BillboardGui")
+                    tag.Name = "SolaraTag"
+                    tag.Size = UDim2.new(0, 120, 0, 30)
+                    tag.AlwaysOnTop = true
+                    tag.ExtentsOffset = Vector3.new(0, 2.5, 0)
+                    tag.Parent = head
+
+                    local text = Instance.new("TextLabel")
+                    text.Name = "Label"
+                    text.Size = UDim2.new(1, 0, 1, 0)
+                    text.BackgroundTransparency = 1
+                    text.Font = Enum.Font.GothamBold
+                    text.TextSize = 11
+                    text.TextColor3 = getTeamColor(p)
+                    text.TextStrokeTransparency = 0.3
+                    text.Parent = tag
+                end
+                local myHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                local dist = myHrp and math.floor((myHrp.Position - head.Position).Magnitude) or 0
+                tag.Label.Text = string.format("%s\n[%d m]", p.DisplayName, dist)
+                tag.Label.TextColor3 = getTeamColor(p)
+            else
+                if head and head:FindFirstChild("SolaraTag") then
+                    head.SolaraTag:Destroy()
+                end
+            end
+
+            -- Хитбоксы
+            if isEnemy(p) and hrp and head and hum and hum.Health > 0 then
+                if hitboxEnabled then
                     hrp.Size = Vector3.new(currentHitboxSize, currentHitboxSize, currentHitboxSize)
-                    hrp.Transparency = 0.75
-                    hrp.BrickColor = BrickColor.new("Bright red")
-                    hrp.Material = Enum.Material.Neon
                     hrp.CanCollide = false
+                    hrp.Massless = true
+
+                    if hitboxVisuals then
+                        hrp.Transparency = 0.75
+                        hrp.BrickColor = BrickColor.new("Bright red")
+                        hrp.Material = Enum.Material.Neon
+                    else
+                        hrp.Transparency = 1
+                    end
                 end
             end
         end
     end
 end)
 
--- Активация первой вкладки по умолчанию
+-- По умолчанию открываем первую вкладку
 switchTab("Combat", btnCombat)
