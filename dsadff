@@ -1,0 +1,133 @@
+-- Prison Life GUI for Solara
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+-- Настройка GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "PrisonLifeSolara"
+ScreenGui.ResetOnSpawn = false
+
+-- Защита от родительских проверок
+local targetParent = LocalPlayer:FindFirstChildOfClass("PlayerGui") or game:GetService("CoreGui")
+ScreenGui.Parent = targetParent
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 220, 0, 310)
+MainFrame.Position = UDim2.new(0.05, 0, 0.3, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = MainFrame
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.BackgroundTransparency = 1
+Title.Text = "Prison Life | Solara"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.SourceSansBold
+Title.TextSize = 16
+Title.Parent = MainFrame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 6)
+UIListLayout.Parent = MainFrame
+
+Title.LayoutOrder = 1
+
+local function createButton(text, order, callback)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0.88, 0, 0, 28)
+    button.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    button.TextColor3 = Color3.fromRGB(240, 240, 240)
+    button.Font = Enum.Font.SourceSansSemibold
+    button.TextSize = 14
+    button.Text = text
+    button.LayoutOrder = order
+    button.Parent = MainFrame
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 5)
+    corner.Parent = button
+
+    button.MouseButton1Click:Connect(callback)
+    return button
+end
+
+-- 1. Получить все оружие
+createButton("Взять всё оружие", 2, function()
+    local itemHandler = workspace:FindFirstChild("Remote") and workspace.Remote:FindFirstChild("ItemHandler")
+    local givers = workspace:FindFirstChild("Prison_ITEMS") and workspace.Prison_ITEMS:FindFirstChild("giver")
+
+    if itemHandler and givers then
+        for _, item in pairs(givers:GetChildren()) do
+            local pickup = item:FindFirstChild("ITEMPICKUP")
+            if pickup then
+                pcall(function()
+                    itemHandler:InvokeServer(pickup)
+                end)
+            end
+        end
+    end
+end)
+
+-- 2. Удалить двери
+createButton("Удалить двери (Сквозь стены)", 3, function()
+    local doors = workspace:FindFirstChild("Doors")
+    if doors then
+        doors:Destroy()
+    end
+end)
+
+-- 3. Быстрый бег
+local speedEnabled = false
+local speedBtn = createButton("Скорость: ВЫКЛ", 4, function()
+    speedEnabled = not speedEnabled
+end)
+
+RunService.RenderStepped:Connect(function()
+    if speedEnabled then
+        speedBtn.Text = "Скорость: ВКЛ"
+        speedBtn.BackgroundColor3 = Color3.fromRGB(60, 110, 60)
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("Humanoid") then
+            char.Humanoid.WalkSpeed = 36
+        end
+    else
+        speedBtn.Text = "Скорость: ВЫКЛ"
+        speedBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    end
+end)
+
+-- 4. Телепорты
+local function teleportTo(cf)
+    local char = LocalPlayer.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if root then
+        root.CFrame = cf
+    end
+end
+
+createButton("ТП: Оружейная", 5, function()
+    teleportTo(CFrame.new(398, 100, 2260))
+end)
+
+createButton("ТП: База криминалов", 6, function()
+    teleportTo(CFrame.new(-943, 94, 2063))
+end)
+
+createButton("ТП: Двор", 7, function()
+    teleportTo(CFrame.new(780, 98, 2460))
+end)
+
+createButton("ТП: Камеры", 8, function()
+    teleportTo(CFrame.new(919, 100, 2441))
+end)
