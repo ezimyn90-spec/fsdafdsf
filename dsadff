@@ -1,21 +1,23 @@
--- Prison Life GUI for Solara
+-- Prison Life GUI for Solara (Extended: Silent Aim & Hitboxes)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local Mouse = LocalPlayer:GetMouse()
 
 -- Настройка GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "PrisonLifeSolara"
+ScreenGui.Name = "PrisonLifeSolaraExt"
 ScreenGui.ResetOnSpawn = false
 
--- Защита от родительских проверок
 local targetParent = LocalPlayer:FindFirstChildOfClass("PlayerGui") or game:GetService("CoreGui")
 ScreenGui.Parent = targetParent
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 220, 0, 310)
-MainFrame.Position = UDim2.new(0.05, 0, 0.3, 0)
+MainFrame.Size = UDim2.new(0, 230, 0, 450)
+MainFrame.Position = UDim2.new(0.05, 0, 0.25, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -33,23 +35,22 @@ Title.Text = "Prison Life | Solara"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.Font = Enum.Font.SourceSansBold
 Title.TextSize = 16
+Title.LayoutOrder = 1
 Title.Parent = MainFrame
 
 local UIListLayout = Instance.new("UIListLayout")
 UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout.Padding = UDim.new(0, 6)
+UIListLayout.Padding = UDim.new(0, 5)
 UIListLayout.Parent = MainFrame
-
-Title.LayoutOrder = 1
 
 local function createButton(text, order, callback)
     local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0.88, 0, 0, 28)
+    button.Size = UDim2.new(0.9, 0, 0, 26)
     button.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
     button.TextColor3 = Color3.fromRGB(240, 240, 240)
     button.Font = Enum.Font.SourceSansSemibold
-    button.TextSize = 14
+    button.TextSize = 13
     button.Text = text
     button.LayoutOrder = order
     button.Parent = MainFrame
@@ -62,7 +63,7 @@ local function createButton(text, order, callback)
     return button
 end
 
--- 1. Получить все оружие
+-- 1. Выдача оружия
 createButton("Взять всё оружие", 2, function()
     local itemHandler = workspace:FindFirstChild("Remote") and workspace.Remote:FindFirstChild("ItemHandler")
     local givers = workspace:FindFirstChild("Prison_ITEMS") and workspace.Prison_ITEMS:FindFirstChild("giver")
@@ -79,20 +80,156 @@ createButton("Взять всё оружие", 2, function()
     end
 end)
 
--- 2. Удалить двери
-createButton("Удалить двери (Сквозь стены)", 3, function()
+-- 2. Удаление дверей
+createButton("Удалить двери", 3, function()
     local doors = workspace:FindFirstChild("Doors")
     if doors then
         doors:Destroy()
     end
 end)
 
--- 3. Быстрый бег
+-- 3. Скорость
 local speedEnabled = false
 local speedBtn = createButton("Скорость: ВЫКЛ", 4, function()
     speedEnabled = not speedEnabled
 end)
 
+-- 4. Silent Aim
+local silentAimEnabled = false
+local silentAimBtn = createButton("Silent Aim: ВЫКЛ", 5, function()
+    silentAimEnabled = not silentAimEnabled
+    if silentAimEnabled then
+        silentAimBtn.Text = "Silent Aim: ВКЛ"
+        silentAimBtn.BackgroundColor3 = Color3.fromRGB(60, 110, 60)
+    else
+        silentAimBtn.Text = "Silent Aim: ВЫКЛ"
+        silentAimBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    end
+end)
+
+local function getClosestTarget()
+    local closest = nil
+    local shortestDist = math.huge
+    local mouseLoc = UserInputService:GetMouseLocation()
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Team ~= LocalPlayer.Team then
+            local char = player.Character
+            if char and char:FindFirstChild("Head") and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
+                local pos, onScreen = Camera:WorldToViewportPoint(char.Head.Position)
+                if onScreen then
+                    local screenDist = (Vector2.new(pos.X, pos.Y) - mouseLoc).Magnitude
+                    if screenDist < shortestDist and screenDist < 400 then
+                        shortestDist = screenDist
+                        closest = char.Head
+                    end
+                end
+            end
+        end
+    end
+    return closest
+end
+
+-- Перехват луча стрельбы под Solara
+pcall(function()
+    local oldIndex
+    oldIndex = hookmetamethod(game, "__index", function(self, key)
+        if silentAimEnabled and not checkcaller() and self == Mouse and (key == "Hit" or key == "hit") then
+            local targetHead = getClosestTarget()
+            if targetHead then
+                return targetHead.CFrame
+            end
+        end
+        return oldIndex(self, key)
+    end)
+end)
+
+-- 5. Hitbox Expander (Хитбоксы)
+local hitboxEnabled = false
+local currentHitboxSize = 6
+
+local hitboxToggleBtn = createButton("Хитбоксы: ВЫКЛ", 6, function()
+    hitboxEnabled = not hitboxEnabled
+    if hitboxEnabled then
+        hitboxToggleBtn.Text = "Хитбоксы: ВКЛ"
+        hitboxToggleBtn.BackgroundColor3 = Color3.fromRGB(60, 110, 60)
+    else
+        hitboxToggleBtn.Text = "Хитбоксы: ВЫКЛ"
+        hitboxToggleBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+        -- Возврат стандартного размера
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
+                p.Character.HumanoidRootPart.Transparency = 1
+            end
+        end
+    end
+end)
+
+-- Контейнер для кнопок изменения размера хитбокса
+local sizeFrame = Instance.new("Frame")
+sizeFrame.Size = UDim2.new(0.9, 0, 0, 26)
+sizeFrame.BackgroundTransparency = 1
+sizeFrame.LayoutOrder = 7
+sizeFrame.Parent = MainFrame
+
+local sizeLayout = Instance.new("UIListLayout")
+sizeLayout.FillDirection = Enum.FillDirection.Horizontal
+sizeLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+sizeLayout.Padding = UDim.new(0, 4)
+sizeLayout.Parent = sizeFrame
+
+local sizeLabel = Instance.new("TextLabel")
+sizeLabel.Size = UDim2.new(0.48, 0, 1, 0)
+sizeLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 48)
+sizeLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+sizeLabel.Font = Enum.Font.SourceSansSemibold
+sizeLabel.TextSize = 13
+sizeLabel.Text = "Разм: " .. tostring(currentHitboxSize)
+sizeLabel.Parent = sizeFrame
+local sizeLabelCorner = Instance.new("UICorner")
+sizeLabelCorner.CornerRadius = UDim.new(0, 4)
+sizeLabelCorner.Parent = sizeLabel
+
+local minusBtn = Instance.new("TextButton")
+minusBtn.Size = UDim2.new(0.24, 0, 1, 0)
+minusBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+minusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+minusBtn.Font = Enum.Font.SourceSansBold
+minusBtn.TextSize = 14
+minusBtn.Text = "-"
+minusBtn.Parent = sizeFrame
+local minusCorner = Instance.new("UICorner")
+minusCorner.CornerRadius = UDim.new(0, 4)
+minusCorner.Parent = minusBtn
+
+local plusBtn = Instance.new("TextButton")
+plusBtn.Size = UDim2.new(0.24, 0, 1, 0)
+plusBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+plusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+plusBtn.Font = Enum.Font.SourceSansBold
+plusBtn.TextSize = 14
+plusBtn.Text = "+"
+plusBtn.Parent = sizeFrame
+local plusCorner = Instance.new("UICorner")
+plusCorner.CornerRadius = UDim.new(0, 4)
+plusCorner.Parent = plusBtn
+
+minusBtn.MouseButton1Click:Connect(function()
+    if currentHitboxSize > 2 then
+        currentHitboxSize = currentHitboxSize - 2
+        sizeLabel.Text = "Разм: " .. tostring(currentHitboxSize)
+    end
+end)
+
+plusBtn.MouseButton1Click:Connect(function()
+    if currentHitboxSize < 30 then
+        currentHitboxSize = currentHitboxSize + 2
+        sizeLabel.Text = "Разм: " .. tostring(currentHitboxSize)
+    end
+end)
+
+-- Обновление физики и хитбоксов в цикле
 RunService.RenderStepped:Connect(function()
     if speedEnabled then
         speedBtn.Text = "Скорость: ВКЛ"
@@ -105,9 +242,25 @@ RunService.RenderStepped:Connect(function()
         speedBtn.Text = "Скорость: ВЫКЛ"
         speedBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
     end
+
+    if hitboxEnabled then
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Team ~= LocalPlayer.Team then
+                local char = p.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    hrp.Size = Vector3.new(currentHitboxSize, currentHitboxSize, currentHitboxSize)
+                    hrp.Transparency = 0.7
+                    hrp.BrickColor = BrickColor.new("Really red")
+                    hrp.Material = Enum.Material.Neon
+                    hrp.CanCollide = false
+                end
+            end
+        end
+    end
 end)
 
--- 4. Телепорты
+-- 6. Телепорты
 local function teleportTo(cf)
     local char = LocalPlayer.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
@@ -116,18 +269,14 @@ local function teleportTo(cf)
     end
 end
 
-createButton("ТП: Оружейная", 5, function()
+createButton("ТП: Оружейная", 8, function()
     teleportTo(CFrame.new(398, 100, 2260))
 end)
 
-createButton("ТП: База криминалов", 6, function()
+createButton("ТП: База криминалов", 9, function()
     teleportTo(CFrame.new(-943, 94, 2063))
 end)
 
-createButton("ТП: Двор", 7, function()
+createButton("ТП: Двор", 10, function()
     teleportTo(CFrame.new(780, 98, 2460))
-end)
-
-createButton("ТП: Камеры", 8, function()
-    teleportTo(CFrame.new(919, 100, 2441))
 end)
